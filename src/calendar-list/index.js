@@ -83,25 +83,51 @@ class CalendarList extends Component {
   }
 
   componentWillReceiveProps(props) {
-    const current = parseDate(this.props.current);
-    const nextCurrent = parseDate(props.current);
-    if (nextCurrent && current && nextCurrent.getTime() !== current.getTime()) {
-      this.scrollToMonth(nextCurrent);
+    this.pastScrollRange = props.pastScrollRange === undefined ? 50 : props.pastScrollRange;
+    this.futureScrollRange = props.futureScrollRange === undefined ? 50 : props.futureScrollRange;
+    this.style = styleConstructor(props.theme);
+    const rows = [];
+    const texts = [];
+    const date = parseDate(props.current) || XDate();
+    for (let i = 0; i <= this.pastScrollRange + this.futureScrollRange; i++) {
+      const text = date.clone().addMonths(i - this.pastScrollRange).toString('MMM yyyy');
+      rows.push(text);
+      texts.push(text);
     }
-
-    const rowclone = this.state.rows;
-    const newrows = [];
-    for (let i = 0; i < rowclone.length; i++) {
-      let val = this.state.texts[i];
-      if (rowclone[i].getTime) {
-        val = rowclone[i].clone();
-        val.propbump = rowclone[i].propbump ? rowclone[i].propbump + 1 : 1;
-      }
-      newrows.push(val);
+    rows[this.pastScrollRange] = date;
+    rows[this.pastScrollRange + 1] = date.clone().addMonths(1, true);
+    if (this.pastScrollRange) {
+      rows[this.pastScrollRange - 1] = date.clone().addMonths(-1, true);
+    } else {
+      rows[this.pastScrollRange + 2] = date.clone().addMonths(2, true);
     }
     this.setState({
-      rows: newrows
+      rows,
+      texts,
+      openDate: date,
+      initialized: false
     });
+    this.lastScrollPosition = -1000;
+
+    // const current = parseDate(this.props.current);
+    // const nextCurrent = parseDate(props.current);
+    // if (nextCurrent && current && nextCurrent.getTime() !== current.getTime()) {
+    //   this.scrollToMonth(nextCurrent);
+    // }
+
+    // const rowclone = this.state.rows;
+    // const newrows = [];
+    // for (let i = 0; i < rowclone.length; i++) {
+    //   let val = this.state.texts[i];
+    //   if (rowclone[i].getTime) {
+    //     val = rowclone[i].clone();
+    //     val.propbump = rowclone[i].propbump ? rowclone[i].propbump + 1 : 1;
+    //   }
+    //   newrows.push(val);
+    // }
+    // this.setState({
+    //   rows: newrows
+    // });
   }
 
   onViewableItemsChanged({viewableItems}) {
